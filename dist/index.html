@@ -341,9 +341,12 @@ svg{display:inline-block}
 .fn-bar.b2{background:var(--ink-2)}
 .fn-bar.b3{background:var(--ink-3)}
 .fn-num{flex:none;width:30px;text-align:right;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-.fn-pct{flex:none;width:66px;text-align:right}
+.fn-pct{flex:none;width:122px;text-align:right}
 .fn-pct b{display:block;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-.fn-pct small{display:block;font-size:12px;color:var(--ink-3);white-space:nowrap}
+.fn-pct small{display:block;font-size:12px;color:var(--ink-3);line-height:1.25}
+.fn-private{display:flex;align-items:center;gap:9px;margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:12px;color:var(--ink-2);font-weight:600}
+.fn-private b{font-size:16px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums}
+.fn-private small{margin-left:auto;color:var(--ink-3);font-weight:600;text-align:right;line-height:1.3}
 .fn-privacy{font-size:12px;color:var(--ink-3);margin-top:11px;text-align:center;line-height:1.6}
 .mini-empty{display:flex;align-items:center;gap:11px;width:100%;background:var(--surface-2);border:1px dashed var(--line-strong);border-radius:var(--r-md);padding:13px 15px}
 .mini-empty .me-ic{flex:none;color:var(--ink-3)}
@@ -2524,18 +2527,57 @@ function groupMeta(cat,g){ if(g!=="dishes") return TAG_GROUPS[g]; const w=catWor
 function suggFor(cat,g){ return g==="dishes"?catWords(cat).sugg:TAG_SUGG[g]; }
 function problemFor(cat,g){ return g==="dishes"?catWords(cat).problem:PROBLEM_TAGS[g]; }
 let wiz=null, wizTimer=null;
-/* ---- 匿名评价会话漏斗（只记次数与状态，不记顾客身份） ---- */
-const SESSION_RANK={opened:0,verified:1,drafted:2,copied:3};
+/* ---- 匿名评价会话漏斗（只记次数与状态，不记顾客身份） ----
+   每层在发生时就地记一次时间戳，同一会话同一层只记一次；
+   state 仅作旧数据兼容，统计一律以时间戳为准。 */
+const SESSION_RANK={opened:0,verified:1,drafted:2,copied:3,private:3};
 function startSession(storeId){
   const s={id:uid(),storeId,state:"opened",createdAt:Date.now(),updatedAt:Date.now()};
   db.review_sessions.push(s); saveDB(db);
   return s.id;
 }
-function advanceSession(state){
-  if(!wiz||!wiz.sessionId) return;
-  const s=db.review_sessions.find(x=>x.id===wiz.sessionId);
-  if(!s) return;
-  if(SESSION_RANK[state]>SESSION_RANK[s.state]){ s.state=state; s.updatedAt=Date.now(); saveDB(db); }
+function curSession(){
+  if(!wiz||!wiz.sessionId) return null;
+  return db.review_sessions.find(x=>x.id===wiz.sessionId)||null;
+}
+function markSession(layer){
+  const s=curSession(); if(!s) return;
+  const t=Date.now(); let dirty=false;
+  if(layer==="drafted"&&!s.draftedAt){ s.draftedAt=t; dirty=true; }
+  if(layer==="copied"){
+    if(!s.draftedAt) s.draftedAt=t;
+    if(!s.copiedAt){ s.copiedAt=t; dirty=true; }
+  }
+  if(layer==="private"&&!s.privateAt){ s.privateAt=t; dirty=true; }
+  if(SESSION_RANK[layer]>SESSION_RANK[s.state]){ s.state=layer; dirty=true; }
+  if(dirty){ s.updatedAt=t; saveDB(db); }
+}
+/* 一次页面打开只算一次「扫码打开」：同一页内重开走同一会话；刷新复用上一会话 */
+const visitSessions={};
+function openMarkerKey(code){ return "review_open_"+code; }
+function restartMarkerKey(code){ return "review_restart_"+code; }
+function visitSession(store,saved){
+  if(saved&&saved.sessionId&&db.review_sessions.some(x=>x.id===saved.sessionId)) return (visitSessions[store.code]=saved.sessionId);
+  if(visitSessions[store.code]&&db.review_sessions.some(x=>x.id===visitSessions[store.code])) return visitSessions[store.code];
+  /* 「重新开始」是同一顾客会话内的重来，沿用原会话，不重复计扫码 */
+  try{
+    const r=JSON.parse(localStorage.getItem(restartMarkerKey(store.code))||"null");
+    if(r){
+      localStorage.removeItem(restartMarkerKey(store.code));
+      if(r.sid&&Date.now()-(r.at||0)<60000&&db.review_sessions.some(x=>x.id===r.sid)) return (visitSessions[store.code]=r.sid);
+    }
+  }catch(e){}
+  let nav="navigate"; try{ const n=performance.getEntriesByType("navigation")[0]; nav=n?n.type:"navigate"; }catch(e){}
+  if(nav==="reload"){
+    try{
+      const m=JSON.parse(localStorage.getItem(openMarkerKey(store.code)));
+      if(m&&m.sid&&Date.now()-(m.at||0)<12*3600*1000&&db.review_sessions.some(x=>x.id===m.sid)) return (visitSessions[store.code]=m.sid);
+    }catch(e){}
+  }
+  const sid=startSession(store.id);
+  visitSessions[store.code]=sid;
+  try{ localStorage.setItem(openMarkerKey(store.code),JSON.stringify({sid,at:Date.now()})); }catch(e){}
+  return sid;
 }
 /* 漏斗一行=一层：原始计数、以相邻上一层为分母的百分比、以及分母是谁。 */
 function fnRow(label,n,pctTxt,note,cls,max){
@@ -2544,10 +2586,14 @@ function fnRow(label,n,pctTxt,note,cls,max){
 }
 function storeFunnel(storeId){
   const ss=db.review_sessions.filter(x=>x.storeId===storeId);
-  const opened=ss.length;
-  const drafted=ss.filter(x=>SESSION_RANK[x.state]>=2).length;
-  const copied=ss.filter(x=>x.state==="copied").length;
-  return {opened,drafted,copied};
+  const f={opened:ss.length,drafted:0,copied:0,priv:0};
+  ss.forEach(s=>{
+    /* 各层按事件独立计数；私密反馈提交本身不进公开漏斗 */
+    if(s.privateAt||s.state==="private") f.priv++;
+    if(s.copiedAt||s.state==="copied"){ f.drafted++; f.copied++; }
+    else if(s.draftedAt||s.state==="drafted") f.drafted++;
+  });
+  return f;
 }
 function funnelHTML(storeId){
   const f=storeFunnel(storeId);
@@ -2564,15 +2610,19 @@ function funnelHTML(storeId){
     <div class="section-head" style="margin:0 0 10px"><h2>数据概览</h2><span class="count-chip">扫码漏斗</span></div>
     <div class="fn-tiles">
       <div class="fn-tile"><b>${f.opened}</b><span>扫码打开</span></div>
-      <div class="fn-tile"><b>${f.drafted}</b><span>完成草稿</span></div>
+      <div class="fn-tile"><b>${f.drafted}</b><span>生成草稿</span></div>
       <div class="fn-tile"><b>${f.copied}</b><span>已复制</span></div>
     </div>
     <div class="fn-funnel">
       ${fnRow("扫码打开",f.opened,"—","基准","b1",max)}
-      ${fnRow("完成草稿",f.drafted,pct(f.drafted,f.opened)+"%","占扫码打开","b2",max)}
-      ${fnRow("已复制",f.copied,pct(f.copied,f.drafted)+"%","占完成草稿","b3",max)}
+      ${fnRow("生成草稿",f.drafted,pct(f.drafted,f.opened)+"%","占扫码打开","b2",max)}
+      ${fnRow("已复制",f.copied,pct(f.copied,f.drafted)+"%","复制转化（占生成草稿）","b3",max)}
     </div>
-    <p class="fn-privacy">仅统计次数，不记录任何顾客身份 · 每层百分比分母为相邻上一层</p>
+    <div class="fn-private">
+      <span class="fn-label">私密反馈</span><b>${f.priv}</b>
+      <small>1-2 星 · 仅门店负责人可见<br>不计入公开漏斗任何一层</small>
+    </div>
+    <p class="fn-privacy">仅统计次数，不记录任何顾客身份 · 各层百分比分母为相邻上一层，已复制百分比的分母恒为生成草稿</p>
   </section>`;
 }
 function bandOf(stars){ return stars>=4?"hi":stars===3?"mid":"low"; }
@@ -2653,6 +2703,8 @@ async function generateDraft(){
   const w=wiz;
   w.generating=true; w.genError=""; w.engineNote=""; renderWiz();
   const notice="智能生成暂时不可用，已为你准备本地草稿，可直接修改";
+  /* 「生成草稿」在这一步就计数，不等走到第 4 步补算；1-2 星私密反馈不算公开草稿 */
+  const countDraft=()=>{ if(w.draft&&!(w.stars>0&&w.stars<=2)) markSession("drafted"); };
   if(llmUsable()&&!w.forceLocal){
     try{
       const text=await callLLM(w);
@@ -2665,6 +2717,7 @@ async function generateDraft(){
       w.engineNote=notice+"。原因："+w.genError+"。下方为本地模板草稿，不会冒充 AI 生成。";
       w.generating=false; renderWiz();
       toast(notice);
+      countDraft();
       return;
     }
   }else{
@@ -2681,6 +2734,7 @@ async function generateDraft(){
     }
   }
   w.generating=false; renderWiz();
+  countDraft();
 }
 function progressKey(code){ return "review_progress_"+code; }
 function progressMeaningful(p){
@@ -2708,10 +2762,9 @@ function renderCustomer(store){
   document.title=`${store.name} · 评价四步`;
   if(wizTimer){ clearInterval(wizTimer); wizTimer=null; }
   const saved=loadProgress(store.code);
-  const reuseSession=saved&&saved.sessionId&&db.review_sessions.some(x=>x.id===saved.sessionId);
   wiz={store,step:1,maxStep:1,suffix:"",verified:false,stars:0,dishes:new Set(),tags:new Set(),quote:"",
     tone:"口语",draft:"",engine:"local",engineNote:"",genError:"",forceLocal:false,openHist:[],closeHist:[],seed:0,generating:false,confirmed:false,copied:false,fails:0,step2Err:null,
-    sessionId:reuseSession?saved.sessionId:startSession(store.id),resume:null,hasProgress:false};
+    sessionId:visitSession(store,saved),resume:null,hasProgress:false};
   if(progressMeaningful(saved)){
     const cl=(v,a,b)=>Math.min(b,Math.max(a,v|0));
     wiz.step=cl(saved.step,1,4); wiz.maxStep=cl(saved.maxStep||saved.step,1,4);
@@ -3005,7 +3058,7 @@ function verifyOrder(){
   if(!db.usage.some(u=>u.storeId===s.id&&u.suffix===v&&!u.completed)) db.usage.push({storeId:s.id,suffix:v,at:now,completed:false});
   saveDB(db);
   w.verified=true; w.step=2; w.maxStep=Math.max(w.maxStep,2);
-  advanceSession("verified");
+  markSession("verified");
   renderWiz();
   toast("订单核验通过");
 }
@@ -3038,7 +3091,6 @@ function wizNext(){
     const n=[...w.draft].length;
     if(n===0||n>120){ toast("草稿不能为空，且不超过 120 字"); return; }
     w.step=4; w.maxStep=Math.max(w.maxStep,4);
-    advanceSession("drafted");
     renderWiz();
   }
 }
@@ -3068,7 +3120,7 @@ function afterCopy(){
     if(u){ u.completed=true; u.at=Date.now(); }
     saveDB(db);
     w.copied=true;
-    advanceSession("copied");
+    markSession("copied");
     renderWiz();
     confetti($("#copySuccess"));
     toast("草稿已复制，评价已记录给门店");
@@ -3463,7 +3515,7 @@ document.addEventListener("click",async e=>{
       if(u){ u.completed=true; u.at=Date.now(); }
       saveDB(db);
       w.copied=true;
-      advanceSession("copied");
+      markSession("private");
       renderWiz();
       toast("私密反馈已提交，仅门店负责人可见");
       break;
@@ -3499,6 +3551,7 @@ document.addEventListener("click",async e=>{
       if(!wiz) break;
       const restartUrl=storeLink(wiz.store.code);
       clearProgress(wiz.store.code);
+      try{ localStorage.setItem(restartMarkerKey(wiz.store.code),JSON.stringify({sid:wiz.sessionId,at:Date.now()})); }catch(e){}
       wiz=null;
       location.href=restartUrl;
       break;
