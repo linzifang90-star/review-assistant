@@ -143,7 +143,7 @@ svg{display:inline-block}
 .field.invalid input,.field.invalid select{border-color:var(--primary);background:#FBF1EE}
 .field.invalid .err{display:block}
 /* 长文本字段：输入框内可横向滚动，另给一个"看全文"的展开区，禁止只用省略号截断后无法查看。 */
-.field input[type="text"],.field input[type="password"]{overflow-x:auto;text-overflow:clip}
+.field input[type="text"],.field input[type="password"],.field input:not([type]){overflow-x:auto;text-overflow:clip}
 .fld-more{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
 .val-full{display:none;margin-top:6px;font-size:12px;font-family:ui-monospace,Consolas,monospace;color:var(--ink-2);
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px;
@@ -303,8 +303,12 @@ svg{display:inline-block}
 .qr-canvas{width:168px;height:168px;flex:none;border-radius:var(--r-md);border:1px solid var(--line-strong);background:#fff;image-rendering:pixelated}
 .qr-side{flex:1;min-width:0}
 .qr-title{font-size:14px;font-weight:900;margin-bottom:6px}
-.qr-url{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--ink-2);background:#fff;
-  border:1px dashed var(--line-strong);border-radius:var(--r-md);padding:8px 10px;word-break:normal;margin-bottom:10px}
+.qr-url-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px}
+/* 链接整体单行显示，装不下时容器横向滚动：不换行即不可能从单词/域名中间断开 */
+.qr-url{flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--ink-2);background:#fff;
+  border:1px dashed var(--line-strong);border-radius:var(--r-md);padding:8px 10px;
+  white-space:nowrap;overflow-x:auto;overflow-y:hidden;line-height:1.6}
+.qr-url-row .btn{flex:none;margin-top:0}
 .qr-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 10px}
 @media(max-width:520px){
   .qr-flex{flex-direction:column;align-items:center}
@@ -1221,10 +1225,19 @@ function llmSig(o){
   return [String(o&&o.endpoint||""), String(o&&o.model||""), k.length, h].join("|");
 }
 /* 只有"三项齐全 + 最近一次测试通过 + 测试后配置未改动"才算已启用。 */
+function llmTestFor(o){
+  const l=db.settings&&db.settings.llm;
+  if(!l||!o) return null;
+  const sig=llmSig(o);
+  if(l.tests&&l.tests[sig]) return l.tests[sig];
+  if(l.test&&l.test.sig===sig) return l.test;
+  return null;
+}
 function llmUsable(){
   const l=db.settings&&db.settings.llm;
   if(!llmComplete()) return false;
-  return !!(l.test && l.test.ok===true && l.test.sig===llmSig(l));
+  const t=llmTestFor(l);
+  return !!(t&&t.ok===true);
 }
 function llmErrText(e){
   if(e&&e.name==="AbortError") return "请求超时（10 秒内接口没有响应）";
@@ -1311,16 +1324,23 @@ function llmStateText(){
   const l=llmSavedCfg();
   if(!l.endpoint) return {cls:"",txt:"未填接口地址：顾客端第 3 步使用本地模板草稿，不会冒充 AI 生成。"};
   if(!(l.model&&l.key)) return {cls:"warn",txt:"配置不完整（接口地址 / 模型名 / 密钥需三项齐全）：当前使用本地模板草稿。"};
-  const t=l.test;
-  if(t&&t.ok===true&&t.sig===llmSig(l)) return {cls:"ok",txt:"已连通 · "+l.model+" · "+fmtTime(t.at)+" 测试通过：顾客端第 3 步调用该模型。"};
-  if(t&&t.ok===false&&t.sig===llmSig(l)) return {cls:"warn",txt:"未连通，当前使用本地模板草稿。失败原因："+t.msg};
+  const t=llmTestFor(l);
+  if(t&&t.ok===true) return {cls:"ok",txt:"已连通 · "+l.model+" · "+fmtTime(t.at)+" 测试通过：顾客端第 3 步调用该模型。"};
+  if(t&&t.ok===false) return {cls:"warn",txt:"未连通，当前使用本地模板草稿。失败原因："+t.msg};
   return {cls:"warn",txt:"配置已保存但尚未通过连通测试，当前使用本地模板草稿。请点「测试连接」验证。"};
 }
 function llmRefreshState(){
   const row=$("#llmStateRow"); if(!row) return;
   const s=llmStateText();
   row.className="cfg-state"+(s.cls?(" "+s.cls):"");
-  row.textContent=llmFormDirty()?(s.txt+"（当前填写与已保存配置不同，保存后生效）"):s.txt;
+  let txt=s.txt;
+  if(llmFormDirty()){
+    const t=llmTestFor(llmFormCfg());
+    txt+=t
+      ? (t.ok?"（当前填写的配置测试已通过，保存后生效）":"（当前填写的配置未连通："+t.msg+"，保存前不会用于草稿）")
+      : "（当前填写与已保存配置不同，保存后生效）";
+  }
+  row.textContent=txt;
 }
 function llmBindForm(){
   ["llmEndpoint","llmModel"].forEach(id=>{
@@ -1384,7 +1404,15 @@ async function testLLMAction(){
   try{ await llmProbe(f); ok=true; msg="连通成功"; }
   catch(e){ msg=llmErrText(e); }
   db.settings=db.settings||{};
-  db.settings.llm=Object.assign({},llmSavedCfg(),{test:{ok:ok,msg:msg,at:Date.now(),sig:llmSig(f)}});
+  const sig=llmSig(f);
+  const res={ok:ok,msg:msg,at:Date.now(),sig:sig};
+  const next=Object.assign({},llmSavedCfg());
+  next.tests=Object.assign({},next.tests||{});
+  next.tests[sig]=res;
+  const keys=Object.keys(next.tests);
+  if(keys.length>8) keys.sort((a,b)=>(next.tests[a].at||0)-(next.tests[b].at||0)).slice(0,keys.length-8).forEach(k=>{ delete next.tests[k]; });
+  if(sig===llmSig(next)) next.test=res;
+  db.settings.llm=next;
   saveDB(db);
   if(btn){ btn.disabled=false; btn.textContent="测试连接"; }
   llmRefreshState();
@@ -2347,14 +2375,19 @@ function openDrawer(id){
           <canvas id="qrCanvas" class="qr-canvas" aria-label="顾客评价二维码"></canvas>
           <div class="qr-side">
             <div class="qr-title">顾客评价二维码</div>
-            <div class="qr-url" id="qrUrl" title="${esc(drawerState.url)}">${esc(drawerState.url)}</div>
+            <div class="qr-url-row">
+              <div class="qr-url" id="qrUrl" title="${esc(drawerState.url)}">${esc(drawerState.url)}</div>
+              <button class="btn btn-ghost btn-sm" type="button" data-action="copy-public">复制链接</button>
+            </div>
             <div class="field qr-domain" id="f-pubDomain" style="margin-bottom:6px">
               <label style="font-size:12px;margin-bottom:4px">站点公开域名</label>
               ${isLocal
                 ? `<input id="pubDomain" value="${esc(publicOrigin())}" placeholder="https://你的域名" inputmode="url" style="padding:9px 12px;font-size:14px">
                    <div class="hint">本地预览使用演示域名，可改为你的公开域名；部署到服务器后自动使用实际域名。二维码与复制链接始终为「域名/?store=门店码」。</div>`
-                : `<input readonly value="${esc(publicOrigin())}" style="padding:9px 12px;font-size:14px">
+                : `<input id="pubDomain" readonly value="${esc(publicOrigin())}" style="padding:9px 12px;font-size:14px">
                    <div class="hint">二维码内容严格等于当前站点公开域名 + /?store=门店码。</div>`}
+              <div class="fld-more"><button class="btn btn-ghost btn-sm" type="button" data-action="pub-peek">查看完整域名</button></div>
+              <div class="val-full" id="pubDomainPeek"></div>
               <div class="err" id="pubDomainErr"></div>
             </div>
           </div>
@@ -2393,9 +2426,22 @@ function openDrawer(id){
     drawerState.url=publicUrl(s);
     $("#qrUrl").textContent=drawerState.url;
     $("#qrUrl").title=drawerState.url;
+    const peek=$("#pubDomainPeek");
+    if(peek&&peek.classList.contains("on")) peek.textContent=dom.value.trim()||"（当前为空）";
     drawDetailQR();
   });
   renderDrawer();
+}
+/* 域名输入框装不下时可展开看全文；已保存回显（只读）同样适用。 */
+function pubPeek(){
+  const inp=$("#pubDomain"), box=$("#pubDomainPeek");
+  const btn=document.querySelector('[data-action="pub-peek"]');
+  if(!inp||!box) return;
+  const on=box.classList.toggle("on");
+  if(on){
+    box.textContent=inp.value.trim()||"（当前为空）";
+    if(btn) btn.textContent="收起完整域名";
+  }else if(btn) btn.textContent="查看完整域名";
 }
 function drawDetailQR(){
   const cv=$("#qrCanvas"); if(!cv) return;
@@ -2701,8 +2747,9 @@ async function generateDraft(){
       w.engineNote="已按你的选择改用本地模板草稿（离线如实组句，不会冒充 AI 生成）。";
     }else{
       const cfg=llmSavedCfg();
+      const t=llmTestFor(cfg);
       const why=llmComplete()
-        ?(cfg.test&&cfg.test.ok===false?("接口连通测试未通过（"+cfg.test.msg+"）"):"接口尚未通过连通测试（需在 AI 引擎设置里点「测试连接」）")
+        ?(t&&t.ok===false?("接口连通测试未通过（"+t.msg+"）"):"接口尚未通过连通测试（需在 AI 引擎设置里点「测试连接」）")
         :"AI 接口未配置完整（需填齐接口地址/模型名/密钥）";
       w.engineNote=notice+"。"+why+"，下方为本地模板草稿，不会冒充 AI 生成。";
       toast(notice);
@@ -3247,6 +3294,7 @@ document.addEventListener("click",async e=>{
     case "stat-detail": openStatDetail(btn.dataset.stat); break;
     case "stat-star": statState.star=+btn.dataset.n; renderStatDetail(); break;
     case "stat-star-jump": statState.type="reviews"; statState.star=+btn.dataset.n; renderStatDetail(); break;
+    case "pub-peek": pubPeek(); break;
     case "copy-public":{
       const ok=await copyText(drawerState.url);
       if(ok) toast("顾客链接已复制，与二维码内容一致");
