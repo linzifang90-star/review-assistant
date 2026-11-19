@@ -610,6 +610,15 @@ svg{display:inline-block}
 .apology{background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:14px 16px;
   font-size:14px;color:var(--ink-2);margin-top:16px;text-align:left}
 .apology b{display:block;font-size:14px;margin-bottom:2px;color:var(--ink)}
+/* 低分第 4 步：提交前只读回显，展示与提交字段完全一致的内容 */
+.priv-review{margin:0 0 14px;border:1px solid var(--line-strong);border-radius:var(--r-md);background:var(--surface-2);padding:14px 16px;text-align:left}
+.pr-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:8px}
+.pr-row{display:flex;gap:10px;font-size:13px;line-height:1.8}
+.pr-k{flex:none;width:4.6em;color:var(--ink-3)}
+.pr-v{flex:1;min-width:0;color:var(--ink);word-break:break-word}
+.pr-tags{display:flex;flex-wrap:wrap;gap:6px;padding-top:2px}
+.pr-tag{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:1px 8px;line-height:1.7}
+.pr-body{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line-strong);font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap;word-break:break-word}
 .cust-foot{text-align:center;font-size:12px;color:var(--ink-3);margin-top:26px}
 .cust-foot a{color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
 .confetti{position:absolute;top:-12px;width:8px;height:12px;border-radius:1px;pointer-events:none;
@@ -2471,77 +2480,54 @@ const PROBLEM_TAGS={
   env:["卫生问题","噪音偏大","拥挤","与描述不符"]
 };
 const TONES=["口语","简洁","详细"];
-const OPEN_BANK={
-  hi:["这次体验挺满意","今天这趟来得值","整体感觉很不错","这一单体验在线","整个过程挺舒心","这趟相当满意"],
-  mid:["这次体验一般","整体中规中矩","这单体验不算出彩","感觉还有提升空间","表现平平","谈不上惊喜"],
-  low:["这次体验挺失望","这单体验不太行","今天这趟有点踩雷","整体体验低于预期","整个过程有点郁闷","这趟不太满意"]
-};
-const TAG_BANK={
-  hi:["{T}这点做得不错","{T}让我印象挺好","{T}确实到位","{T}加分不少","{T}挺让人舒服","{T}值得夸一句"],
-  mid:["{T}方面还算过得去","{T}马马虎虎","{T}谈不上好","{T}还有空间","{T}普普通通","{T}不算亮点"],
-  low:["{T}的问题挺明显","{T}让我挺失望","{T}确实不到位","{T}拖了后腿","{T}体验很差","{T}需要改进"]
-};
-const CLOSE_BANK={
-  hi:["下次还会再来","愿意推荐给朋友","之后会回购","这店我收藏了","下次还选这家","会带朋友来"],
-  mid:["希望下次能更好","期待改进后的样子","再看后续表现","希望越做越好","改进后会再来","先观望一下"],
-  low:["希望门店认真改进","短期内不想再来了","这次真的劝退","希望别再这样","不打算再来了","体验需要整改"]
-};
+/* 模板只允许出现四类内容：星级（STAR_BANK）、已选商品/菜品（item）、已选标签（原样成句）、顾客原话（原样引用）。
+   意愿句默认不存在；仅当顾客在第 2 步主动勾选意愿标签时，才按标签写入对应原句。 */
 const STAR_BANK={
-  hi:["打分我给了{S}星","{S}星是我认真打的","这{S}星给得心甘情愿","{S}星代表我的真实态度"],
+  hi:["打分我给了{S}星","{S}星是我认真打的","这{S}星我给得很踏实","{S}星代表我的真实态度"],
   mid:["我给{S}星，不算苛责","{S}星是我的真实感受","{S}星如实记录"],
-  low:["打{S}星不是为了挑刺","{S}星代表我真实的不满","这{S}星希望被认真对待"]
+  low:["打{S}星不是为了挑刺","{S}星代表我真实的不满","{S}星是我这次的真实评价"]
 };
+const INTENT_TAGS=["会再来","愿意推荐给朋友","下次还选这家"];
+const INTENT_LINE={"会再来":"我还会再来","愿意推荐给朋友":"我愿意推荐给朋友","下次还选这家":"下次还选这家"};
 const CONNECTORS={口语:["说实话","讲真","怎么说呢"],简洁:[],详细:["另外","整体来说","补充一句"]};
 /* 按门店类型取词：句式、标签候选、问题标签、称呼都随 cat 变化，避免跨行业套模板 */
 const CAT_DRAFT={
   "餐饮美食":{noun:"菜品",ic:liIco("bowl",20),ask:"这次点了哪些菜？",example:"等位四十分钟才坐下",
     sugg:["招牌必点","现点现做","分量足","口味地道","食材新鲜","甜品出彩"],
     problem:["出品不佳","分量偏少","口味不符","食材不新鲜"],
-    open:{hi:["吃得挺开心","这顿相当满意"],mid:["这顿吃得一般","饭点体验平平"],low:["吃得有点郁闷","这顿不太满意"]},
-    close:{hi:["下次还点这家的菜","馋了还会来"],mid:["改天再试试别的菜","希望菜品更稳定"],low:["不想再来吃了","短期内不碰这家"]},
-    item:{hi:["点了{D}，很对我胃口","{D}味道在线","{D}吃得出来用心","{D}挺合我口味","{D}挺合心意","{D}值得点"],
-      mid:["点了{D}，吃着还行","{D}口感平常","{D}不算难吃","{D}亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["点了{D}，不太合口","{D}味道差劲","{D}品质堪忧","{D}没达到预期","{D}吃得皱眉","{D}口感欠佳"]}},
+    item:{hi:["点了{D}，我很满意","{D}挺合我口味","点了{D}，整体挺满意"],
+      mid:["点了{D}，感觉一般","{D}谈不上好","点了{D}，没什么特别"],
+      low:["点了{D}，我不满意","{D}不太合我口味","点了{D}，体验不好"]}},
   "咖啡茶饮":{noun:"饮品",ic:liIco("cup",20),ask:"这次点了哪些饮品？",example:"排了二十分钟才拿到手",
     sugg:["招牌必点","现点现做","风味地道","豆子新鲜","奶泡细腻","甜品出彩"],
     problem:["出品不佳","风味不符","豆子不新鲜","口感偏淡"],
-    open:{hi:["喝得挺满足","这杯点对了"],mid:["这杯喝着一般","饮品表现平平"],low:["喝得有点郁闷","这杯不太满意"]},
-    close:{hi:["下次还来喝","会常来打卡"],mid:["改天换个口味试试","希望出品更稳定"],low:["不想再来喝了","换别家试试"]},
-    item:{hi:["点了{D}，风味很正","{D}口感在线","{D}喝得出来用心","{D}挺合我口味","{D}香气很讨喜","{D}值得点"],
-      mid:["点了{D}，喝着还行","{D}口感平常","{D}不算难喝","{D}风味亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["点了{D}，不太合口","{D}风味差劲","{D}品质堪忧","{D}没达到预期","{D}喝得皱眉","{D}口感欠佳"]}},
+    item:{hi:["点了{D}，我很满意","{D}挺合我口味","点了{D}，整体挺满意"],
+      mid:["点了{D}，感觉一般","{D}谈不上好","点了{D}，没什么特别"],
+      low:["点了{D}，我不满意","{D}不太合我口味","点了{D}，体验不好"]}},
   "丽人美业":{noun:"项目",ic:liIco("scissors",20),ask:"这次做了哪些项目？",example:"款式和参考图一模一样",
     sugg:["款式还原度高","手法专业","色胶齐全","消毒到位","无推销","效果持久"],
     problem:["效果不符","手法粗糙","卫生不到位","款式翻车"],
-    open:{hi:["做完心情都好了","这次变美很成功"],mid:["做完感觉一般","效果不算惊艳"],low:["做完有点后悔","效果让人失望"]},
-    close:{hi:["下次还找这位技师","会预约下次"],mid:["下次换个款式试试","希望手法更稳定"],low:["不想再来做项目了","短期内不预约了"]},
-    item:{hi:["做了{D}，效果很合心意","{D}手法在线","{D}做得出来用心","{D}还原度很高","{D}细节处理到位","{D}值得做"],
-      mid:["做了{D}，效果还行","{D}手法平常","{D}不算翻车","{D}亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["做了{D}，效果不太行","{D}手法粗糙","{D}品质堪忧","{D}没达到预期","{D}做得皱眉","{D}细节欠佳"]}},
+    item:{hi:["做了{D}，我很满意","{D}挺合我心意","做了{D}，整体挺满意"],
+      mid:["做了{D}，感觉一般","{D}谈不上好","做了{D}，没什么特别"],
+      low:["做了{D}，我不满意","{D}不太合我心意","做了{D}，体验不好"]}},
   "休闲娱乐":{noun:"项目",ic:liIco("gamepad",20),ask:"这次玩了哪些项目？",example:"一局接一局根本停不下来",
     sugg:["项目好玩","设施新","氛围好","规则讲得清","不限时","组队友好"],
     problem:["项目无聊","设施老旧","体验不符","规则混乱"],
-    open:{hi:["玩得挺尽兴","这趟玩得很值"],mid:["玩得感觉一般","这趟玩得不算值"],low:["玩得有点扫兴","这趟玩得不值"]},
-    close:{hi:["下次还来玩","会组局再来"],mid:["下次换个项目试试","希望体验更稳定"],low:["不想再来玩了","换别家玩"]},
-    item:{hi:["玩了{D}，体验很尽兴","{D}环节在线","{D}设计得用心","{D}挺合我兴趣","{D}氛围很到位","{D}值得玩"],
-      mid:["玩了{D}，感觉还行","{D}环节平常","{D}不算无聊","{D}亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["玩了{D}，体验不太行","{D}环节敷衍","{D}品质堪忧","{D}没达到预期","{D}玩得皱眉","{D}体验欠佳"]}},
+    item:{hi:["玩了{D}，我很满意","{D}挺合我兴趣","玩了{D}，整体挺满意"],
+      mid:["玩了{D}，感觉一般","{D}谈不上好","玩了{D}，没什么特别"],
+      low:["玩了{D}，我不满意","{D}不太合我兴趣","玩了{D}，体验不好"]}},
   "酒店民宿":{noun:"房型",ic:liIco("bed",20),ask:"这次住了哪些房型？",example:"一觉睡到自然醒",
     sugg:["床品舒服","隔音好","热水稳定","早餐好吃","景观好","入住快"],
     problem:["卫生不佳","隔音差","设施老旧","与图片不符"],
-    open:{hi:["住得挺舒服","这晚睡得很香"],mid:["住得感觉一般","睡眠体验平平"],low:["住得有点糟心","这晚没休息好"]},
-    close:{hi:["下次还住这家","会再订这间"],mid:["下次换个房型试试","希望细节更到位"],low:["不想再住这家了","换别家住"]},
-    item:{hi:["住了{D}，体验很舒服","{D}卫生在线","{D}布置得用心","{D}挺合我需求","{D}睡感很到位","{D}值得住"],
-      mid:["住了{D}，感觉还行","{D}设施平常","{D}不算踩雷","{D}亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["住了{D}，体验不太行","{D}卫生堪忧","{D}设施老旧","{D}没达到预期","{D}住得皱眉","{D}睡感欠佳"]}},
+    item:{hi:["住了{D}，我很满意","{D}挺合我需求","住了{D}，整体挺满意"],
+      mid:["住了{D}，感觉一般","{D}谈不上好","住了{D}，没什么特别"],
+      low:["住了{D}，我不满意","{D}不太合我需求","住了{D}，体验不好"]}},
   "零售购物":{noun:"商品",ic:liIco("bag",20),ask:"这次买了哪些商品？",example:"挑了很久终于选中它",
     sugg:["款式好看","做工扎实","尺码齐全","包装细致","正品保障","上新快"],
     problem:["做工差","质感不符","尺码不准","包装破损"],
-    open:{hi:["买得挺开心","这单买得很值"],mid:["买得感觉一般","商品不算惊艳"],low:["买得有点后悔","这单买得不值"]},
-    close:{hi:["下次还来买","会回购这款"],mid:["下次看看别的款","希望品质更稳定"],low:["不想再来买了","这单买得后悔"]},
-    item:{hi:["买了{D}，质感很合心意","{D}做工在线","{D}用料看得出用心","{D}挺合我需求","{D}细节很到位","{D}值得买"],
-      mid:["买了{D}，用着还行","{D}做工平常","{D}不算差劲","{D}亮点不多","{D}勉强及格","{D}没什么记忆点"],
-      low:["买了{D}，质感不太行","{D}做工粗糙","{D}品质堪忧","{D}没达到预期","{D}用着皱眉","{D}细节欠佳"]}}
+    item:{hi:["买了{D}，我很满意","{D}挺合我心意","买了{D}，整体挺满意"],
+      mid:["买了{D}，感觉一般","{D}谈不上好","买了{D}，没什么特别"],
+      low:["买了{D}，我不满意","{D}不太合我心意","买了{D}，体验不好"]}}
 };
 function catWords(cat){ return CAT_DRAFT[cat]||CAT_DRAFT["餐饮美食"]; }
 function groupMeta(cat,g){ if(g!=="dishes") return TAG_GROUPS[g]; const w=catWords(cat); return {name:w.noun+"标签",ic:w.ic,bg:TAG_GROUPS.dishes.bg}; }
@@ -2655,31 +2641,32 @@ function tagPool(store,g,stars){
 function localDraft(w){
   const band=bandOf(w.stars), tone=w.tone;
   const cw=catWords(wiz.store.cat);
-  const OB=OPEN_BANK[band].concat(cw.open[band]), CB=CLOSE_BANK[band].concat(cw.close[band]), IB=cw.item[band];
-  const dishes=[...w.dishes], tags=[...w.tags];
+  const IB=cw.item[band];
+  const allTags=[...w.tags];
+  const intents=band==="low"?[]:allTags.filter(t=>INTENT_TAGS.includes(t));
+  const tags=allTags.filter(t=>!INTENT_TAGS.includes(t));
   const len=s=>[...s].length;
   const rnd=n=>Math.floor(Math.random()*n);
   const shuffle=n=>{ const a=[...Array(n).keys()]; for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-  const pickFresh=(arr,hist)=>{ const avoid=new Set(hist||[]); let i=rnd(arr.length); if(arr.length>avoid.size){ let guard=0; while(avoid.has(i)&&guard++<20) i=rnd(arr.length); } return i; };
-  w.openHist=w.openHist||[]; w.closeHist=w.closeHist||[];
-  const oi=pickFresh(OB,w.openHist); w.openHist=[...w.openHist,oi].slice(-2);
-  const ci=pickFresh(CB,w.closeHist); w.closeHist=[...w.closeHist,ci].slice(-2);
-  const dOrderRaw=shuffle(IB.length);
   const tagGrams=new Set(); tags.forEach(t=>{ const a=[...t]; for(let i=0;i+3<=a.length;i++) tagGrams.add(a.slice(i,i+3).join("")); });
+  const dOrderRaw=shuffle(IB.length);
   const okIdx=dOrderRaw.filter(i=>{ const a=[...IB[i].replace("{D}","")]; for(let k=0;k+3<=a.length;k++) if(tagGrams.has(a.slice(k,k+3).join(""))) return false; return true; });
   const dOrder=okIdx.length?okIdx:dOrderRaw;
-  const tOrder=shuffle(TAG_BANK[band].length);
-  const parts=[OB[oi]];
-  dishes.slice(0,dOrder.length).forEach((n,i)=>parts.push(IB[dOrder[i]].replace("{D}",n)));
-  tags.slice(0,TAG_BANK[band].length).forEach((t,i)=>parts.push(TAG_BANK[band][tOrder[i]].replace("{T}",t)));
-  if(w.quote.trim()) parts.push("就像我说的：「"+w.quote.trim()+"」");
-  parts.push(CB[ci]);
-  while(len(parts.join("，"))>120&&parts.length>3) parts.splice(parts.length-2,1);
-  if(tone!=="简洁"){ const sb=STAR_BANK[band]; const line=sb[rnd(sb.length)].replace("{S}",w.stars); const cand=[...parts.slice(0,-1),line,parts[parts.length-1]]; if(len(cand.join("，"))<=120) parts.splice(parts.length-1,0,line); }
-  const conn=CONNECTORS[tone]||[];
-  let text=parts.join("，");
-  if(conn.length){ const c=conn[rnd(conn.length)]; const cand=parts.slice(0,-1).join("，")+"，"+c+"，"+parts[parts.length-1]; if(len(cand)<=120) text=cand; }
+  const parts=[];
+  if(tone!=="简洁") parts.push(STAR_BANK[band][rnd(STAR_BANK[band].length)].replace("{S}",w.stars));
+  [...w.dishes].slice(0,dOrder.length).forEach((n,i)=>parts.push(IB[dOrder[i]].replace("{D}",n)));
+  tags.forEach(t=>parts.push(t));
+  intents.forEach(t=>parts.push(INTENT_LINE[t]));
+  if(!parts.length) parts.push(STAR_BANK[band][0].replace("{S}",w.stars));
+  const quote=w.quote.trim();
+  const quotePart=quote?("就像我说的：「"+quote+"」"):"";
+  const compose=arr=>(quotePart?arr.concat([quotePart]):arr).join("，");
+  while(len(compose(parts))>120&&parts.length>1) parts.pop();
+  let text=compose(parts);
+  if(len(text)>120&&quotePart) text=parts.join("，");
   if(len(text)>120) text=[...text].slice(0,119).join("")+"…";
+  const conn=CONNECTORS[tone]||[];
+  if(conn.length&&len(text)<114){ const c=conn[rnd(conn.length)]; const cand=c+"，"+text; if(len(cand)<=120) text=cand; }
   return text;
 }
 function draftViolations(text,w){
@@ -2825,15 +2812,21 @@ function renderCustomer(store){
       </div>
     </div>
     <section id="wizBody"></section>
-    <p class="cust-foot">由 <a href="${esc(storeLink(store.code))}">好评助手</a> 提供评价服务 · 草稿仅在您的设备剪贴板，发布由您自行完成</p>
+    <p class="cust-foot" id="custFoot">由 <a href="${esc(storeLink(store.code))}">好评助手</a> 提供评价服务 · 草稿仅在您的设备剪贴板，发布由您自行完成</p>
   </main>`;
   renderWiz();
 }
-const WIZ_STEPS=["核验订单","选择体验","整理草稿","复制发布"];
+const WIZ_STEPS=["核验订单","选择体验","整理草稿"];
+/* 第 4 步名称随分支变化：低分只提交私密反馈，不出现复制/发布字样 */
+function wizStepNames(w){
+  const low=!!w&&w.stars>0&&w.stars<=2;
+  return WIZ_STEPS.concat(low?"提交反馈":"复制发布");
+}
 function renderWiz(){
   const w=wiz; if(!w) return;
+  const lowStep=w.stars>0&&w.stars<=2;
   const steps=$("#wizSteps");
-  steps.innerHTML=WIZ_STEPS.map((n,i)=>{
+  steps.innerHTML=wizStepNames(w).map((n,i)=>{
     const no=i+1;
     return `${i?`<span class="bar"></span>`:""}<button class="wstep ${no===w.step?"on":no<w.step?"done":""}" data-action="wiz-step" data-n="${no}" ${no>w.maxStep?"disabled":""}><span class="n">${no<w.step?liIco("check",12):no}</span>${n}</button>`;
   }).join("");
@@ -2850,6 +2843,9 @@ function renderWiz(){
   bindWiz();
   saveProgress();
   const rs=$("#wizRestart"); if(rs) rs.style.display=w.hasProgress?"":"none";
+  const foot=$("#custFoot");
+  if(foot) foot.innerHTML=`由 <a href="${esc(storeLink(w.store.code))}">好评助手</a> 提供评价服务 · `+
+    (lowStep?"私密反馈仅门店负责人可见":"草稿仅在您的设备剪贴板，发布由您自行完成");
 }
 function step1HTML(){
   const w=wiz, s=w.store;
@@ -2896,6 +2892,10 @@ function step2HTML(){
           <div class="tag-pool">${pool.map(t=>`<button class="tag-pick ${w.tags.has(t)?"on":""}" data-action="pick-tag" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
         </div>`;
       }).join("")}
+      ${low?"":`<div class="tag-zone" style="margin-top:14px">
+        <div class="t">后续意愿（可选，勾选后才会写进草稿）</div>
+        <div class="tag-pool">${INTENT_TAGS.map(t=>`<button class="tag-pick ${w.tags.has(t)?"on":""}" data-action="pick-tag" data-t="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+      </div>`}
       ${low?"":`<div class="pick-hint ${w.step2Err&&w.step2Err.tag?"show":""}" id="hint-tag">请至少选择 2 个你真实体验到的标签，写出来的评价才是你自己的感受</div>`}
       <div class="tag-zone" style="margin-top:14px">
         <div class="t">一句原话（选填，≤40 字，原样引用）</div>
@@ -2925,7 +2925,7 @@ function step3HTML(){
   const draftArea=`<textarea class="cust-textarea" id="draftInput" style="margin-top:0;min-height:148px;scroll-margin-bottom:120px">${esc(w.draft)}</textarea>
       <div class="char-count ${okLen?"":"bad"}" id="charCount">${n} / 120 字 · 建议 60–120</div>
       ${low
-        ?`<p class="privacy-note" style="text-align:left;margin-top:6px">您给的是低分，这段内容只会作为私密反馈提交给门店负责人，不会公开显示，也不能复制或跳转评价平台；内容须来自您选中的体验，字数不足不会硬凑。</p>`
+        ?`<p class="privacy-note" style="text-align:left;margin-top:6px">您给的是低分，这段内容只会作为私密反馈提交给门店负责人，不会公开显示，也不会跳转评价平台；内容须来自您选中的体验，字数不足不会硬凑。</p>`
         :`<p class="privacy-note" style="text-align:left;margin-top:6px">草稿可直接编辑；内容须来自您选中的体验，不超过 120 字即可复制，字数不足不会硬凑。</p>`}`;
   let main;
   if(w.generating){
@@ -2990,30 +2990,40 @@ function step4HTML(){
   </section>`;
 }
 function step4LowHTML(){
-  const w=wiz;
+  const w=wiz, s=w.store, cw=catWords(s.cat);
   const n=[...w.draft].length;
   if(w.copied) return `<section class="card step-card rise">
     <div class="step-title">第 4 步 · 私密反馈已送达</div>
-    <div class="copy-success">${liIco("check",15)} 你的反馈已直接发给门店负责人，不会公开显示<br><span style="font-weight:600;font-size:12px">感谢您的真实反馈，门店会据此改进。此内容仅门店可见，不会跳转任何评价平台、不可复制发布。</span></div>
+    <div class="copy-success">${liIco("check",15)} 你的反馈已直接发给门店负责人，不会公开显示<br><span style="font-weight:600;font-size:12px">感谢您的真实反馈，门店会据此改进。此内容仅门店可见，不会跳转任何评价平台、不会公开。</span></div>
     <div class="wiz-actions in-flow" style="margin-top:14px">
       <button class="btn btn-ghost" data-action="wiz-back">返回修改</button>
     </div>
-    <p class="privacy-note">私密反馈仅门店可见 · 不自动发布、不跳转平台</p>
+    <p class="privacy-note">私密反馈仅门店可见 · 不公开、不跳转平台</p>
   </section>`;
+  const dishes=[...w.dishes], tags=[...w.tags], quote=w.quote.trim();
   return `<section class="card step-card rise">
     <div class="step-title">第 4 步 · 提交私密反馈</div>
     <p class="step-sub">您给的是低分，这段反馈只会私下发给门店负责人，不会公开显示，也不会跳转到任何评价平台。</p>
     <div class="apology" style="margin:0 0 14px"><b>抱歉这次没让您满意</b>您的真实反馈对门店改进很重要，以下内容仅门店负责人可见。</div>
+    <div class="priv-review" aria-readonly="true">
+      <div class="pr-title">${liIco("lock",13)} 将提交给门店负责人的完整内容（只读）</div>
+      <div class="pr-row"><span class="pr-k">星级评分</span><span class="pr-v">${w.stars} 星</span></div>
+      <div class="pr-row"><span class="pr-k">${esc(cw.noun)}</span><span class="pr-v">${dishes.length?esc(dishes.join("、")):"未选择"}</span></div>
+      <div class="pr-row"><span class="pr-k">体验标签</span><span class="pr-v pr-tags">${tags.length?tags.map(t=>`<span class="pr-tag">${esc(t)}</span>`).join(""):"未选择"}</span></div>
+      <div class="pr-row"><span class="pr-k">我的原话</span><span class="pr-v">${quote?"「"+esc(quote)+"」":"未填写"}</span></div>
+      <div class="pr-body">${n?esc(w.draft):"（正文为空）"}</div>
+    </div>
+    <p class="privacy-note" style="text-align:left;margin:-2px 0 12px">这是只读回显。如需修改正文，点下方「返回修改」回第 3 步编辑；星级、${esc(cw.noun)}与标签可再回第 2 步调整。</p>
     <div class="confirm-row ${w.confirmed?"on":""}" id="confirmRow">
       <input type="checkbox" id="confirmBox" ${w.confirmed?"checked":""}>
-      <span style="font-size:14px;font-weight:600;color:var(--ink-2)">我确认：这是我本人的真实体验，同意作为私密反馈直接发送给门店负责人（不公开发布、不跳转平台）。</span>
+      <span style="font-size:14px;font-weight:600;color:var(--ink-2)">我确认：这是我本人的真实体验，同意作为私密反馈直接发送给门店负责人（不会公开、不跳转平台）。</span>
     </div>
     <div class="wiz-actions in-flow" style="margin-top:14px">
       <button class="btn btn-ghost" data-action="wiz-back">返回修改</button>
       <button class="btn btn-primary" data-action="submit-private" ${w.confirmed&&n>0?"":"disabled"}>提交反馈</button>
     </div>
     ${n===0?`<p class="privacy-note" style="color:var(--danger)">反馈内容为空，请返回上一步补充后再提交。</p>`:""}
-    <p class="privacy-note">私密反馈仅门店可见 · 不自动发布、不跳转平台、不可复制公开</p>
+    <p class="privacy-note">私密反馈仅门店可见 · 不公开、不跳转平台</p>
   </section>`;
 }
 function bindWiz(){
@@ -3093,7 +3103,7 @@ function wizNext(){
     if(!low){
       const needDish=(w.store.dishes||[]).length>0;
       const dishOk=!needDish||w.dishes.size>0;
-      const tagOk=w.tags.size>=2;
+      const tagOk=[...w.tags].filter(t=>!INTENT_TAGS.includes(t)).length>=2;
       if(!dishOk||!tagOk){
         w.step2Err={dish:!dishOk,tag:!tagOk};
         renderWiz();
