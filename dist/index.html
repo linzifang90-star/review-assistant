@@ -537,14 +537,12 @@ svg{display:inline-block}
 .char-count{font-size:12px;font-weight:700;color:var(--ink-3);text-align:right;margin-top:6px;white-space:nowrap}
 .char-count.bad{color:var(--primary-deep)}
 .gen-spin{animation:spin 1s linear infinite}
-.wiz-actions{display:flex;gap:10px;margin-top:18px;position:sticky;bottom:var(--wm-bottom);z-index:6;background:var(--surface);border-radius:var(--r-md)}
+/* 方案 A：四步操作栏一律随文档流排在卡片末尾，不吸底，杜绝滚动中途遮挡内容 */
+.wiz-actions{display:flex;gap:10px;margin-top:18px}
 .order-field{margin-bottom:10px}
 @media(max-width:853.98px){
-.wiz-actions{position:static;left:auto;right:auto;bottom:auto;margin:18px 0 0;padding:0;padding-right:var(--wm-keep-xl);flex-direction:column;background:transparent;border-top:0;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;z-index:auto}
+.wiz-actions{flex-direction:column;margin-top:18px}
 .wiz-actions .btn{flex:none;min-width:0;white-space:normal;line-height:1.35}
-.order-field{position:fixed;left:0;right:0;bottom:0;margin:0;padding:12px 16px calc(12px + var(--wm-bottom));background:rgba(255,252,245,.96);border-top:1px solid var(--line);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:46}
-.customer-shell:has(.order-field){padding-bottom:calc(164px + var(--wm-bottom))}
-.step-card:has(.order-field){padding-bottom:calc(98px + var(--wm-bottom))}
 .store-actions{padding-right:var(--wm-keep);gap:6px}
 .store-actions .push-right{margin-left:0}
 .store-actions .btn{padding:8px;font-size:12px}
@@ -553,7 +551,6 @@ svg{display:inline-block}
 @media(min-width:854px) and (max-width:1240px){
 .store-actions{padding-right:var(--wm-keep)}
 }
-.wiz-actions.in-flow{position:static;left:auto;right:auto;bottom:auto;margin:14px 0 0;padding:0;padding-right:var(--wm-keep-xl);background:transparent;border-top:0;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;z-index:auto}
 .wiz-actions .btn{flex:1;padding:13px;min-height:48px}
 .confirm-row{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--line-strong);
   border-radius:var(--r-md);padding:13px 14px;cursor:pointer;transition:all .18s}
