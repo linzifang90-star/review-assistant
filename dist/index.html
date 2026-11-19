@@ -823,7 +823,6 @@ function demoStoreImg(name,hex){
 
 const DEMO_REV=2;
 const DEMO_CODES=["KF882301","ST109702","NL552003"];
-const OLD_DEMO_NAME_RE=/^川香火锅/;
 function buildDemoStores(m){
   const mk=(code,name,cat,addr,phone,contact,per,open,close,usccPre,dishes,tags,links,n)=>{
     const uscc=makeUSCC(usccPre);
@@ -888,35 +887,6 @@ function seedDB(){
   const stores=buildDemoStores(m);
   return {merchants:[m],stores,reviews:buildDemoReviews(stores),review_sessions:buildDemoSessions(stores),session:null,demoRev:DEMO_REV};
 }
-/* 演示门店清单固定：缺失补齐、旧版同码替换、旧版残留清掉；商家自建门店一律不动 */
-function syncDemoStores(d){
-  if(d.demoRev===DEMO_REV) return;
-  const m=(d.merchants||[]).find(x=>x.phone===DEMO_PHONE);
-  if(!m){ d.demoRev=DEMO_REV; return; }
-  const fresh=buildDemoStores(m);
-  const specOf={}; fresh.forEach(s=>{ specOf[s.code]=s; });
-  const dropIds=new Set();
-  d.stores.forEach(s=>{
-    if(s.merchantId!==m.id) return;
-    const spec=specOf[s.code];
-    if(!spec){ if(s.demo||OLD_DEMO_NAME_RE.test(s.name||"")) dropIds.add(s.id); return; }
-    if(!s.demo&&(s.name||"")!==spec.name) dropIds.add(s.id);
-  });
-  if(dropIds.size){
-    d.stores=d.stores.filter(s=>!dropIds.has(s.id));
-    d.reviews=d.reviews.filter(r=>!dropIds.has(r.storeId));
-    d.review_sessions=(d.review_sessions||[]).filter(x=>!dropIds.has(x.storeId));
-  }
-  const have={}; d.stores.forEach(s=>{ have[s.code]=s; });
-  const add=fresh.filter(f=>!have[f.code]);
-  if(add.length){
-    d.stores.push(...add);
-    d.reviews.push(...buildDemoReviews(add));
-    d.review_sessions.push(...buildDemoSessions(add));
-  }
-  d.stores.forEach(s=>{ if(s.merchantId===m.id&&specOf[s.code]) s.demo=true; });
-  d.demoRev=DEMO_REV;
-}
 function blankStore(){
   return {name:"",cat:"",address:"",phone:"",contact:"",perCapita:"",hours:{open:"",close:""},
     quals:{licenseImg:null,storeImg:null,licenseName:"",uscc:""},
@@ -928,7 +898,7 @@ function normalizeDB(d){
   d.locks=(d.locks&&typeof d.locks==="object")?d.locks:{};
   d.settings=(d.settings&&typeof d.settings==="object")?d.settings:{};
   d.review_sessions=Array.isArray(d.review_sessions)?d.review_sessions:[];
-  syncDemoStores(d);
+  /* 加载只读：不再补写演示门店/演示评价，打开或刷新页面不得改动任何数字 */
   d.stores.forEach(s=>{ if(!Array.isArray(s.orders)||!s.orders.length) s.orders=genOrders(); });
   if(!d.fixCatTags){
     const food=new Set(["招牌必点","现点现做","分量足","口味地道","食材新鲜","甜品出彩","出品不佳","分量偏少","口味不符","食材不新鲜"]);
@@ -982,7 +952,15 @@ function maskPhone(p){ return p.slice(0,3)+"****"+p.slice(7); }
 function getP(o,p){ return p.split(".").reduce((a,k)=>a==null?a:a[k],o); }
 function setP(o,p,v){ const ks=p.split("."); const last=ks.pop(); ks.reduce((a,k)=>a[k],o)[last]=v; }
 function storeReviews(id){ return db.reviews.filter(r=>r.storeId===id); }
-function avgOf(id){ const rs=storeReviews(id); return rs.length? rs.reduce((a,r)=>a+r.stars,0)/rs.length : 0; }
+function reviewAvg(list){ return list.length? list.reduce((a,r)=>a+r.stars,0)/list.length : 0; }
+function avgOf(id){ return reviewAvg(storeReviews(id)); }
+/* 商家端所有汇总数字的唯一事实来源：逐店取评价列表，再拼成总池；累计 = 各门店之和，今日新增/平均分同池计算 */
+function myReviewFacts(){
+  const stores=myStores();
+  const all=[].concat(...stores.map(s=>storeReviews(s.id)));
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  return {stores, all, today:all.filter(r=>r.createdAt>=t0.getTime()).length, avg:reviewAvg(all)};
+}
 function fmtTime(ts){
   const d=new Date(ts), now=new Date();
   const day=t=>new Date(t.getFullYear(),t.getMonth(),t.getDate()).getTime();
@@ -1630,17 +1608,17 @@ function renderConsole(){
   renderStats(); renderStoreGrid();
 }
 function renderStats(){
-  const ids=new Set(myStores().map(s=>s.id));
-  const rs=db.reviews.filter(r=>ids.has(r.storeId));
-  const avg=rs.length? rs.reduce((a,r)=>a+r.stars,0)/rs.length : 0;
-  const t0=new Date(); t0.setHours(0,0,0,0);
-  const today=rs.filter(r=>r.createdAt>=t0.getTime()).length;
+  const f=myReviewFacts();
+  const ids=new Set(f.stores.map(s=>s.id));
+  const rs=f.all;
+  const avg=f.avg;
+  const today=f.today;
   $("#stats").innerHTML=`
     <button type="button" class="card stat stat-btn rise" style="animation-delay:.02s" data-action="stat-detail" data-stat="stores" aria-label="查看在营门店明细"><span class="num">${ids.size}</span><span class="lbl"><span class="dot" style="background:var(--line-strong)"></span>在营门店</span>${statGo()}</button>
     <button type="button" class="card stat stat-btn rise" style="animation-delay:.06s" data-action="stat-detail" data-stat="reviews" aria-label="查看累计评价明细"><span class="num">${rs.length}</span><span class="lbl"><span class="dot" style="background:var(--ink)"></span>累计评价</span>${statGo()}</button>
     <button type="button" class="card stat stat-btn rise" style="animation-delay:.1s" data-action="stat-detail" data-stat="stars" aria-label="查看平均星级分布"><span class="num">${rs.length?avg.toFixed(1):"—"}</span><span class="lbl"><span class="dot" style="background:var(--star)"></span>平均星级</span>${statGo()}</button>
     <button type="button" class="card stat stat-btn rise" style="animation-delay:.14s" data-action="stat-detail" data-stat="today" aria-label="查看今日新增评价"><span class="num">${today}</span><span class="lbl"><span class="dot" style="background:var(--amber)"></span>今日新增</span>${statGo()}</button>`;
-  const c=$("#storeCount"); if(c) c.textContent=myStores().length+" 家";
+  const c=$("#storeCount"); if(c) c.textContent=f.stores.length+" 家";
 }
 function statGo(){
   return `${liIco("chev",15)}`;
@@ -1687,9 +1665,9 @@ function openStatDetail(type){
 function renderStatDetail(){
   const body=$("#statBody"), sub=$("#statSub"), title=$("#statTitle");
   if(!body||!statState) return;
-  const stores=myStores();
-  const ids=new Set(stores.map(s=>s.id));
-  const all=db.reviews.filter(r=>ids.has(r.storeId)).sort((a,b)=>b.createdAt-a.createdAt);
+  const facts=myReviewFacts();
+  const stores=facts.stores;
+  const all=facts.all.slice().sort((a,b)=>b.createdAt-a.createdAt);
   const nameOf=id=>{const s=db.stores.find(x=>x.id===id);return s?s.name:"已删除门店";};
   const t0=new Date(); t0.setHours(0,0,0,0);
   const type=statState.type;
