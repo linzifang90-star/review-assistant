@@ -29,6 +29,7 @@
   --primary:#C8402A;
   --primary-hi:#A93421;
   --primary-deep:#A93421;
+  --primary-light:#E09A8A;
   --primary-soft:#F6E2DB;
   --amber:#E8A33D;
   --amber-soft:#F9ECD2;
@@ -45,6 +46,8 @@
   --r-lg:12px;
   --r-md:8px;
   --r-sm:6px;
+  --r-btn:10px;
+  --r-pill:999px;
   --font:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -70,7 +73,7 @@ svg{display:inline-block}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:700;
-  border-radius:var(--r-md);padding:12px 22px;font-size:14px;transition:background .15s,color .15s,border-color .15s;
+  border-radius:var(--r-btn);padding:12px 22px;font-size:14px;transition:background .15s,color .15s,border-color .15s;
   user-select:none;white-space:nowrap}
 .btn svg{flex:none}
 .btn:active{transform:scale(.97)}
@@ -124,11 +127,11 @@ svg{display:inline-block}
 /* ============ 商家登录 ============ */
 .login-shell{max-width:440px;margin:0 auto;padding:44px 16px var(--wm-bottom)}
 .login-card{overflow:hidden}
-.login-hero{position:relative;padding:34px 26px 30px;color:#F7EFDE;background:var(--ink);border-radius:0}
+.login-hero{position:relative;padding:34px 26px 30px;color:var(--ink);background:var(--surface);border-top:3px solid var(--primary);border-radius:0}
 .login-hero .mark{width:56px;height:56px;border-radius:var(--r-lg);background:var(--primary);display:flex;align-items:center;
   justify-content:center;margin-bottom:16px}
 .login-hero h1{font-size:20px;font-weight:900}
-.login-hero p{font-size:12px;color:#B7AA97;margin-top:5px}
+.login-hero p{font-size:12px;color:var(--ink-3);margin-top:5px}
 .login-body{padding:26px 24px 24px}
 .field{margin-bottom:16px;position:relative}
 .field label{display:block;font-size:14px;font-weight:700;color:var(--ink-2);margin-bottom:7px}
@@ -166,22 +169,22 @@ svg{display:inline-block}
 .code-wrap{position:relative}
 .code-wrap input{padding-right:112px!important;letter-spacing:4px;font-weight:700;font-variant-numeric:tabular-nums}
 .send-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--primary-soft);color:var(--primary-deep);
-  font-size:12px;font-weight:800;padding:9px 13px;border-radius:var(--r-md);transition:filter .15s,opacity .15s;white-space:nowrap}
+  font-size:12px;font-weight:800;padding:9px 13px;border-radius:var(--r-btn);transition:filter .15s,opacity .15s;white-space:nowrap}
 .send-btn:hover{filter:brightness(.97)}
 .send-btn[disabled]{background:var(--bg-deep);color:var(--ink-3);opacity:1;pointer-events:none}
 .demo-chip{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--surface-2);
   border:1px dashed var(--line-strong);border-radius:var(--r-md);padding:11px 14px;font-size:12px;color:var(--ink-2);margin-bottom:18px;line-height:1.5}
 .demo-chip b{font-variant-numeric:tabular-nums}
-.demo-fill{flex:none;background:#fff;color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--r-md);
+.demo-fill{flex:none;background:#fff;color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--r-btn);
   font-size:12px;font-weight:800;padding:6px 12px;transition:all .15s}
 .demo-fill:hover{background:var(--primary);border-color:var(--primary);color:#fff}
 .login-note{font-size:12px;color:var(--ink-3);text-align:center;margin-top:14px}
 
 /* ============ 商家控制台 ============ */
 .hero-strip{margin:20px 0 16px;padding:22px 24px;border-radius:var(--r-lg);position:relative;overflow:hidden;
-  background:var(--ink);color:#F7EFDE}
-.hero-strip h1{font-size:20px;font-weight:900;position:relative}
-.hero-strip p{font-size:12px;color:#B7AA97;margin-top:4px;position:relative}
+  background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--primary)}
+.hero-strip h1{font-size:20px;font-weight:900;position:relative;color:var(--ink)}
+.hero-strip p{font-size:12px;color:var(--ink-3);margin-top:4px;position:relative}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:18px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
 .stat{padding:16px 18px;border-radius:0;border:none;border-left:1px solid var(--line)}
@@ -236,9 +239,9 @@ svg{display:inline-block}
 .ua-ic .avatar-init{font-size:12px}
 .store-title{flex:1;min-width:0}
 .store-title h3{font-size:14px;font-weight:900;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-sm);white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:var(--r-pill);white-space:nowrap}
 .chip-cat{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
-.chip-code{background:var(--surface-2);color:var(--ink-2);border:1px dashed var(--line-strong);font-family:ui-monospace,Consolas,monospace;letter-spacing:1.5px;font-size:12px;font-weight:800}
+.chip-code{background:var(--surface-2);color:var(--ink-2);border:1px dashed var(--line-strong);border-radius:var(--r-sm);font-family:ui-monospace,Consolas,monospace;letter-spacing:1.5px;font-size:12px;font-weight:800}
 .chip-rv-unsubmitted{background:var(--bg-deep);color:var(--ink-3)}
 .chip-rv-pending{background:var(--amber-soft);color:var(--amber-deep)}
 .chip-rv-approved{background:var(--success-soft);color:var(--success)}
@@ -248,7 +251,7 @@ svg{display:inline-block}
 .score-num{font-size:30px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1}
 .stars-row{display:inline-flex;gap:3px;align-items:center}
 .stars-row svg{display:block}
-.store-meta{font-size:12px;color:var(--ink-3);line-height:1.7}
+.store-meta{font-size:12px;color:var(--ink-3);line-height:1.7;display:flex;flex-wrap:wrap;column-gap:6px;row-gap:0}
 .nw{white-space:nowrap}
 .trend{width:100%;border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
 .trend-head{font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:7px}
@@ -317,7 +320,7 @@ svg{display:inline-block}
 }
 .drawer-body{overflow-y:auto;padding:16px 22px calc(20px + env(safe-area-inset-bottom))}
 .filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.fchip{font-size:12px;font-weight:700;padding:7px 14px;border-radius:var(--r-sm);background:var(--surface-2);
+.fchip{font-size:12px;font-weight:700;padding:7px 14px;border-radius:var(--r-pill);background:var(--surface-2);
   border:1px solid var(--line-strong);color:var(--ink-2);transition:all .15s}
 .fchip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
 .review-item{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;margin-bottom:10px}
@@ -325,12 +328,12 @@ svg{display:inline-block}
 .review-item .time{font-size:12px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
 .review-item p{font-size:14px;color:var(--ink-2);word-break:break-word}
 .review-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.rtag{font-size:12px;font-weight:700;background:var(--amber-soft);color:var(--amber-deep);padding:2px 9px;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:4px}
+.rtag{font-size:12px;font-weight:700;background:var(--amber-soft);color:var(--amber-deep);padding:2px 9px;border-radius:var(--r-pill);display:inline-flex;align-items:center;gap:4px}
 .rtag svg{width:12px;height:12px}
-.badge-private{font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line-strong);padding:2px 9px;border-radius:var(--r-sm)}
-.badge-public{font-size:12px;font-weight:700;background:var(--success-soft);color:var(--success);padding:2px 9px;border-radius:var(--r-sm)}
+.badge-private{font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line-strong);padding:2px 9px;border-radius:var(--r-pill)}
+.badge-public{font-size:12px;font-weight:700;background:var(--success-soft);color:var(--success);padding:2px 9px;border-radius:var(--r-pill)}
 
-.funnel-zone{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;margin-bottom:16px}
+.funnel-zone{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;margin-bottom:16px}
 .fn-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-bottom:14px;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .fn-tile{background:var(--surface-2);border-radius:0;padding:14px 10px;text-align:center;border-left:1px solid var(--line)}
 .fn-tile:first-child{border-left:none}
@@ -341,9 +344,9 @@ svg{display:inline-block}
 .fn-label{flex:none;width:56px;font-size:12px;color:var(--ink-2);font-weight:600}
 .fn-track{flex:1;height:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:2px;overflow:hidden}
 .fn-bar{height:100%;border-radius:1px;transition:width .4s ease}
-.fn-bar.b1{background:var(--ink)}
-.fn-bar.b2{background:var(--ink-2)}
-.fn-bar.b3{background:var(--ink-3)}
+.fn-bar.b1{background:var(--primary-deep)}
+.fn-bar.b2{background:var(--primary)}
+.fn-bar.b3{background:var(--primary-light)}
 .fn-num{flex:none;width:30px;text-align:right;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 .fn-pct{flex:none;width:122px;text-align:right}
 .fn-pct b{display:block;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -394,8 +397,22 @@ svg{display:inline-block}
 .ed-grid .full{grid-column:1/-1}
 @media(max-width:640px){.ed-grid{grid-template-columns:1fr}}
 .hours-row{display:flex;align-items:center;gap:10px}
-.hours-row input{flex:1}
-.hours-row .sep{font-size:14px;color:var(--ink-3);font-weight:800}
+.hours-row .sep{font-size:14px;color:var(--ink-3);font-weight:800;flex:none}
+/* 24 小时制自绘选择器：不依赖浏览器区域设置，避免出现 AM / PM。 */
+.time-pick{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:2px;height:42px;
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-btn);padding:0 8px;
+  transition:border-color .2s,background .2s}
+.time-pick:focus-within{border-color:var(--primary);background:#fff}
+.time-pick:hover{border-color:var(--line-strong)}
+.time-pick:focus-within:hover{border-color:var(--primary)}
+.time-pick select{width:auto;flex:none;appearance:none;-webkit-appearance:none;border:none;background:transparent;padding:0 2px;
+  font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);text-align:center;text-align-last:center;
+  outline:none;cursor:pointer}
+.time-pick .tc{font-size:14px;font-weight:800;color:var(--ink-3);line-height:1}
+.hours-preview{font-size:12px;color:var(--ink-3);margin-top:6px}
+.hours-preview b{font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.field.invalid .time-pick{border-color:var(--primary);background:#FBF1EE}
+.field.invalid .time-pick select{background:transparent}
 .upload-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
 @media(max-width:480px){.upload-row{grid-template-columns:1fr}}
 .upload-tile{position:relative;border:1.5px dashed var(--line-strong);border-radius:var(--r-md);background:var(--surface-2);
@@ -455,7 +472,7 @@ svg{display:inline-block}
 .tag-group .gt .ic svg{width:13px;height:13px}
 .tag-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:9px}
 .tag-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line-strong);
-  border-radius:var(--r-md);padding:6px 8px 6px 14px;font-size:14px;font-weight:700;color:var(--ink-2);transition:all .15s}
+  border-radius:var(--r-pill);padding:6px 8px 6px 14px;font-size:14px;font-weight:700;color:var(--ink-2);transition:all .15s}
 .tag-chip .txt{cursor:pointer}
 .tag-chip .txt:hover{color:var(--primary)}
 .tag-chip .x{width:18px;height:18px;border-radius:var(--r-sm);background:var(--bg-deep);color:var(--ink-3);font-size:12px;
@@ -472,7 +489,7 @@ svg{display:inline-block}
 .tag-add-row input{flex:1;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:8px 16px;font-size:14px;outline:none}
 .tag-add-row input:focus{border-color:var(--primary)}
 .tag-sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.tag-sugg button{font-size:12px;font-weight:700;color:var(--ink-3);border:1px dashed var(--line-strong);border-radius:var(--r-sm);padding:3px 10px;transition:all .15s}
+.tag-sugg button{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--ink-3);border:1px dashed var(--line-strong);border-radius:var(--r-pill);padding:3px 10px;transition:all .15s}
 .tag-sugg button:hover{color:var(--primary);border-color:var(--primary)}
 .tag-err{font-size:12px;color:var(--primary-deep);font-weight:700;margin-top:6px;display:none}
 .tag-err.show{display:block}
@@ -507,7 +524,7 @@ svg{display:inline-block}
 .cust-info .row .ic svg{width:15px;height:15px;vertical-align:-3px}
 .cust-info a{color:var(--primary-deep);font-weight:700}
 .cust-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
-.cust-tags span{font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:3px 11px}
+.cust-tags span{font-size:12px;font-weight:700;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px 11px}
 .wiz-head{position:sticky;top:0;z-index:35;margin:0 -16px;padding:10px 16px 9px;
   background:rgba(250,245,236,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 .wiz-steps{display:flex;align-items:center;gap:5px}
@@ -569,7 +586,7 @@ svg{display:inline-block}
 .plat-btn>svg{color:var(--ink-3);flex:none}
 .plat-btn.disabled{cursor:default;border-style:dashed;background:var(--bg-deep);color:var(--ink-3);opacity:1}
 .plat-btn.disabled:hover{border-color:var(--line-strong)}
-.copy-success{background:var(--success-soft);border:1px solid var(--success-line);border-radius:var(--r-md);padding:14px 16px;
+.copy-success{background:var(--success-soft);border:1px solid var(--success-line);border-radius:var(--r-lg);padding:14px 16px;
   color:var(--success);font-weight:700;font-size:14px;position:relative;overflow:hidden;margin-bottom:14px;line-height:1.6;animation:rise .16s both}
 .copy-success svg{vertical-align:-3px}
 @media(max-width:520px){
@@ -597,7 +614,7 @@ svg{display:inline-block}
 .tag-zone .t{font-size:14px;font-weight:700;color:var(--ink-2);margin-bottom:9px}
 .tag-zone .t svg{width:15px;height:15px;vertical-align:-3px}
 .tag-pool{display:flex;flex-wrap:wrap;gap:8px}
-.tag-pick{font-size:14px;font-weight:700;padding:9px 15px;border-radius:var(--r-sm);background:var(--surface);
+.tag-pick{font-size:14px;font-weight:700;padding:9px 15px;border-radius:var(--r-pill);background:var(--surface);
   border:1px solid var(--line-strong);color:var(--ink-2);transition:all .12s}
 .tag-pick.on{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:800}
 .tag-pick:active{transform:scale(.96)}
@@ -611,13 +628,13 @@ svg{display:inline-block}
   font-size:14px;color:var(--ink-2);margin-top:16px;text-align:left}
 .apology b{display:block;font-size:14px;margin-bottom:2px;color:var(--ink)}
 /* 低分第 4 步：提交前只读回显，展示与提交字段完全一致的内容 */
-.priv-review{margin:0 0 14px;border:1px solid var(--line-strong);border-radius:var(--r-md);background:var(--surface-2);padding:14px 16px;text-align:left}
+.priv-review{margin:0 0 14px;border:1px solid var(--line-strong);border-radius:var(--r-lg);background:var(--surface-2);padding:14px 16px;text-align:left}
 .pr-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink-3);margin-bottom:8px}
-.pr-row{display:flex;gap:10px;font-size:13px;line-height:1.8}
-.pr-k{flex:none;width:4.6em;color:var(--ink-3)}
+.pr-row{display:flex;gap:10px;font-size:14px;line-height:1.8}
+.pr-k{flex:none;width:4.6em;font-size:12px;color:var(--ink-3)}
 .pr-v{flex:1;min-width:0;color:var(--ink);word-break:break-word}
 .pr-tags{display:flex;flex-wrap:wrap;gap:6px;padding-top:2px}
-.pr-tag{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:1px 8px;line-height:1.7}
+.pr-tag{font-size:12px;font-weight:600;background:#fff;border:1px solid var(--line-strong);border-radius:var(--r-pill);padding:1px 8px;line-height:1.7}
 .pr-body{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line-strong);font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap;word-break:break-word}
 .cust-foot{text-align:center;font-size:12px;color:var(--ink-3);margin-top:26px}
 .cust-foot a{color:var(--ink-3);text-decoration:underline;text-underline-offset:3px}
@@ -693,6 +710,7 @@ const LI={
  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16.2 16.2L20.5 20.5"/>',
  chart:'<path d="M4 20h16"/><path d="M7.5 20v-5"/><path d="M12 20V9"/><path d="M16.5 20v-8"/>',
  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
  ban:'<circle cx="12" cy="12" r="8"/><path d="M6.5 17.5l11-11"/>',
  doc:'<path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4"/><path d="M9.5 12h6M9.5 15.5h6"/>',
  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 4.2v2.4M12 17.4v2.4M4.2 12h2.4M17.4 12h2.4M6.5 6.5l1.7 1.7M15.8 15.8l1.7 1.7M17.5 6.5l-1.7 1.7M8.2 15.8l-1.7 1.7"/>',
@@ -980,6 +998,16 @@ function fmtTime(ts){
   if(diff===1) return "昨天 "+hm;
   if(diff<7) return diff+" 天前";
   return (d.getMonth()+1)+"月"+d.getDate()+"日";
+}
+/* 历史值可能带 AM/PM，展示前统一成 24 小时制；只换写法，不改时刻。 */
+function fmtHM(v){
+  const s=String(v||"").trim();
+  const m=/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec(s);
+  if(!m) return s;
+  let h=parseInt(m[1],10);
+  if(m[3]) h=(h%12)+(/PM/i.test(m[3])?12:0);
+  if(h>23) return s;
+  return String(h).padStart(2,"0")+":"+m[2];
 }
 function starSVG(fill,size){
   return `<svg viewBox="0 0 24 24" width="${size||16}" height="${size||16}" aria-hidden="true"><path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.5l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z" fill="${fill}" stroke="${fill==="#EADFC8"?"#CFC3AC":"none"}" stroke-width="1"/></svg>`;
@@ -1611,7 +1639,7 @@ function renderConsole(){
     <span class="me-chip"><span class="dot"></span>${esc(maskPhone(m.phone))}</span>
     <button class="btn btn-ghost btn-sm" data-action="llm-settings" title="AI 草稿引擎设置">${liIco("gear",15)}AI 引擎</button>
     <button class="btn btn-ghost btn-sm" data-action="logout">退出</button>
-    <button class="btn btn-primary btn-sm" data-action="open-add">＋ 新建门店</button>
+    <button class="btn btn-primary btn-sm" data-action="open-add">${liIco("plus",14)} 新建门店</button>
   </div></header>
   <main class="wrap">
     <section class="hero-strip rise">
@@ -1770,7 +1798,7 @@ function renderStoreGrid(){
     grid.innerHTML = myStores().length===0
       ? `<div class="card empty-state rise"><div class="big">${liIco("shop",40)}</div>
          <p>您还没有门店<br>创建第一家门店，自动生成专属 8 位门店码与顾客评价链接</p>
-         <button class="btn btn-primary" data-action="open-add">＋ 创建第一家门店</button></div>`
+         <button class="btn btn-primary" data-action="open-add">${liIco("plus",16)} 创建第一家门店</button></div>`
       : `<div class="card empty-state rise"><div class="big">${liIco("search",40)}</div><p>没有匹配的门店，换个关键词试试</p></div>`;
     return;
   }
@@ -1793,7 +1821,7 @@ function renderStoreGrid(){
       </div>
       <div class="store-score">
         <span class="score-line"><span class="score-num">${rs.length?avg.toFixed(1):"—"}</span>${starsRow(avg,16)}</span>
-        <div class="store-meta"><span class="nw">${rs.length} 条评价</span> · <span class="nw">人均 ¥${esc(s.perCapita||"—")}</span>${s.hours&&s.hours.open?` · <span class="nw">${esc(s.hours.open)}–${esc(s.hours.close)}</span>`:""}</div>
+        <div class="store-meta"><span class="nw">${rs.length} 条评价</span><span class="nw">· 人均 ¥${esc(s.perCapita||"—")}</span>${s.hours&&s.hours.open?`<span class="nw">· 营业 ${esc(fmtHM(s.hours.open))}–${esc(fmtHM(s.hours.close))}</span>`:""}</div>
       </div>
       ${trendHTML(s.id)}
       <div class="store-actions">
@@ -1830,6 +1858,28 @@ function edInput(key,attrs,ph){
   const v=getP(ed.draft,key);
   return `<input data-key="${key}" id="i-${key.replace(/\./g,"-")}" value="${esc(v==null?"":v)}" placeholder="${esc(ph||"")}" ${attrs||""}>`;
 }
+function timeParts(v){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(fmtHM(v));
+  return m?{h:m[1].padStart(2,"0"),m:m[2]}:{h:"",m:""};
+}
+function timeOptions(n,cur,ph){
+  let s=`<option value="">${ph}</option>`;
+  for(let i=0;i<n;i++){ const v=String(i).padStart(2,"0"); s+=`<option value="${v}" ${cur===v?"selected":""}>${v}</option>`; }
+  return s;
+}
+function edTime(key,label){
+  const t=timeParts(getP(ed.draft,key));
+  return `<div class="time-pick" data-time-key="${key}">
+    <select data-time-key="${key}" data-time-part="h" aria-label="${label}小时">${timeOptions(24,t.h,"时")}</select>
+    <span class="tc">:</span>
+    <select data-time-key="${key}" data-time-part="m" aria-label="${label}分钟">${timeOptions(60,t.m,"分")}</select>
+  </div>`;
+}
+function hoursText(open,close){ return open&&close?fmtHM(open)+"–"+fmtHM(close):""; }
+function renderHoursPreview(){
+  const el=$("#hoursPreview"); if(!el) return;
+  el.textContent=hoursText(getP(ed.draft,"hours.open"),getP(ed.draft,"hours.close"))||"未设置";
+}
 function renderEditor(keepScroll){
   const y=keepScroll?window.scrollY:0;
   editorActive=true;
@@ -1865,7 +1915,7 @@ function renderEditor(keepScroll){
         ${edField("contact","联系人",edInput("contact",'maxlength="20"',"例如：沈店长"),true)}
         ${edField("phone","门店电话",edInput("phone",'maxlength="20"',"手机号或区号-座机号"),true,"支持 13800000000 或 0571-88123456")}
         ${edField("address","门店地址",edInput("address",'maxlength="60"',"省市区 + 街道门牌 / 商铺号"),true,"不少于 5 个字",true)}
-        ${edField("hours","营业时间",`<div class="hours-row">${edInput("hours.open",'type="time"',"")}<span class="sep">至</span>${edInput("hours.close",'type="time"',"")}</div>`,true,"支持跨天营业，如 18:00 至 02:00",true)}
+        ${edField("hours","营业时间",`<div class="hours-row">${edTime("hours.open","开始时间")}<span class="sep">至</span>${edTime("hours.close","结束时间")}</div><div class="hours-preview">24 小时制 · <b id="hoursPreview">${esc(hoursText(d.hours.open,d.hours.close)||"未设置")}</b></div>`,true,"支持跨天营业，如 18:00 至 02:00",true)}
       </div>
     </section>
 
@@ -1894,7 +1944,7 @@ function renderEditor(keepScroll){
         <input class="n" id="dName" maxlength="20" placeholder="菜名（必填）">
         <input class="p" id="dPrice" type="number" min="0" max="10000" placeholder="价格 ¥">
         <input class="d" id="dDesc" maxlength="40" placeholder="一句话介绍（选填）">
-        <button class="btn btn-soft btn-sm" data-action="dish-add">＋ 添加</button>
+        <button class="btn btn-soft btn-sm" data-action="dish-add">${liIco("plus",13)} 添加</button>
       </div>
       <div class="tag-err ${ed.errors.dishAdd?"show":""}" id="dishAddErr">${esc(ed.errors.dishAdd||"")}</div>
       <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" data-action="dish-demo">填入 3 道示例招牌菜</button></div>
@@ -2032,10 +2082,10 @@ function tagGroupHTML(g){
     }).join(""):`<span style="font-size:12px;color:var(--ink-3)">暂无标签，从下方建议或输入添加</span>`}</div>
     <div class="tag-add-row">
       <input id="tagIn-${g}" maxlength="12" placeholder="添加${G.name}，回车确认">
-      <button class="btn btn-soft btn-sm" data-action="tag-add" data-g="${g}">＋</button>
+      <button class="btn btn-soft btn-sm" data-action="tag-add" data-g="${g}" aria-label="添加标签">${liIco("plus",13)}</button>
     </div>
     <div class="tag-err ${err?"show":""}" id="tagErr-${g}">${esc(err||"")}</div>
-    ${sugg.length?`<div class="tag-sugg">${sugg.map(t=>`<button data-action="tag-sugg" data-g="${g}" data-t="${esc(t)}">＋ ${esc(t)}</button>`).join("")}</div>`:""}
+    ${sugg.length?`<div class="tag-sugg">${sugg.map(t=>`<button data-action="tag-sugg" data-g="${g}" data-t="${esc(t)}">${liIco("plus",11)} ${esc(t)}</button>`).join("")}</div>`:""}
   </div>`;
 }
 function updateSpy(){
@@ -2353,7 +2403,7 @@ function openDrawer(id){
   const isLocal=!(location.protocol==="http:"||location.protocol==="https:");
   const info=[];
   if(s.address) info.push(`<div class="row"><span class="ic">${liIco("pin",15)}</span><span>${esc(s.address)}</span></div>`);
-  if(s.hours&&s.hours.open) info.push(`<div class="row"><span class="ic">${liIco("clock",15)}</span><span><span class="nw">营业 ${esc(s.hours.open)} – ${esc(s.hours.close)}</span> · <span class="nw">人均 ¥${esc(s.perCapita)}</span></span></div>`);
+  if(s.hours&&s.hours.open) info.push(`<div class="row"><span class="ic">${liIco("clock",15)}</span><span><span class="nw">营业 ${esc(fmtHM(s.hours.open))}–${esc(fmtHM(s.hours.close))}</span> · <span class="nw">人均 ¥${esc(s.perCapita)}</span></span></div>`);
   if(s.phone) info.push(`<div class="row"><span class="ic">${liIco("phone",15)}</span><span>${esc(s.phone)}（${esc(s.contact||"门店")}）</span></div>`);
   const scrim=document.createElement("div");
   scrim.className="scrim"; scrim.dataset.layer="1";
@@ -2588,7 +2638,7 @@ function visitSession(store,saved){
 }
 /* 漏斗一行=一层：原始计数、以相邻上一层为分母的百分比、以及分母是谁。 */
 function fnRow(label,n,pctTxt,note,cls,max){
-  const w=Math.max(n?6:0,Math.round(n/Math.max(1,max)*100));
+  const w=n?Math.round(n/Math.max(1,max)*100):0;
   return `<div class="fn-row"><span class="fn-label">${label}</span><div class="fn-track"><div class="fn-bar ${cls}" style="width:${w}%"></div></div><span class="fn-num">${n}</span><span class="fn-pct"><b>${pctTxt}</b><small>${note}</small></span></div>`;
 }
 function storeFunnel(storeId){
@@ -2801,7 +2851,7 @@ function renderCustomer(store){
   <main class="customer-shell">
     <section class="card cust-hero rise">
       <h1>${esc(store.name)}</h1>
-      <p class="meta">${esc(store.cat)}${hasHours?` · <span class="nw">营业 ${esc(store.hours.open)}–${esc(store.hours.close)}</span> · <span class="nw">人均 ¥${esc(store.perCapita)}</span>`:""}${store.address?`<br>${liIco("pin",13)}${esc(store.address)}`:""}</p>
+      <p class="meta">${esc(store.cat)}${hasHours?` · <span class="nw">营业 ${esc(fmtHM(store.hours.open))}–${esc(fmtHM(store.hours.close))}</span> · <span class="nw">人均 ¥${esc(store.perCapita)}</span>`:""}${store.address?`<br>${liIco("pin",13)}${esc(store.address)}`:""}</p>
     </section>
     <div class="wiz-head">
       <div class="wiz-steps" id="wizSteps"></div>
@@ -2962,7 +3012,7 @@ function step4HTML(){
   return `<section class="card step-card rise">
     <div class="step-title">第 4 步 · 确认并复制发布</div>
     <p class="step-sub">勾选真实性确认后才能一键复制；随后自行到商家绑定的平台粘贴发布。</p>
-    ${w.copied?`<div class="copy-success" id="copySuccess">${liIco("check",15)} 草稿已复制到剪贴板 · 评价已记录给门店${w.stars>=4?"":"（私下反馈）"}<br><span style="font-weight:600;font-size:12px">到下方平台粘贴发布即可，我们不会自动填充、不会代发。</span></div>`:""}
+    ${w.copied?`<div class="copy-success" id="copySuccess">${liIco("check",16)} 草稿已复制到剪贴板 · 评价已记录给门店${w.stars>=4?"":"（私下反馈）"}<br><span style="font-weight:600;font-size:12px">到下方平台粘贴发布即可，我们不会自动填充、不会代发。</span></div>`:""}
     <div class="confirm-row ${w.confirmed?"on":""}" id="confirmRow">
       <input type="checkbox" id="confirmBox" ${w.confirmed?"checked":""}>
       <span style="font-size:14px;font-weight:600;color:var(--ink-2)">我确认：以上草稿来自我刚才的真实体验，未包含虚构内容，由我自行粘贴发布。</span>
@@ -2994,7 +3044,7 @@ function step4LowHTML(){
   const n=[...w.draft].length;
   if(w.copied) return `<section class="card step-card rise">
     <div class="step-title">第 4 步 · 私密反馈已送达</div>
-    <div class="copy-success">${liIco("check",15)} 你的反馈已直接发给门店负责人，不会公开显示<br><span style="font-weight:600;font-size:12px">感谢您的真实反馈，门店会据此改进。此内容仅门店可见，不会跳转任何评价平台、不会公开。</span></div>
+    <div class="copy-success">${liIco("check",16)} 你的反馈已直接发给门店负责人，不会公开显示<br><span style="font-weight:600;font-size:12px">感谢您的真实反馈，门店会据此改进。此内容仅门店可见，不会跳转任何评价平台、不会公开。</span></div>
     <div class="wiz-actions in-flow" style="margin-top:14px">
       <button class="btn btn-ghost" data-action="wiz-back">返回修改</button>
     </div>
@@ -3267,7 +3317,16 @@ document.addEventListener("change",e=>{
   const t=e.target;
   if(editorActive&&t.matches('input[type="file"][data-img]')) handleUpload(t);
   if(editorActive&&t.dataset&&t.dataset.key==="cat"){ setP(ed.draft,"cat",t.value); markDirty(); delete ed.errors.cat; const f=t.closest(".field"); if(f)f.classList.remove("invalid"); }
-  if(editorActive&&t.dataset&&t.dataset.key&&t.type==="time"){ setP(ed.draft,t.dataset.key,t.value); markDirty(); delete ed.errors.hours; const f=t.closest(".field"); if(f){f.classList.remove("invalid"); const er=f.querySelector(".err"); if(er)er.textContent="";} }
+  if(editorActive&&t.dataset&&t.dataset.timeKey){
+    const box=t.closest(".time-pick");
+    const h=box&&box.querySelector('[data-time-part="h"]').value;
+    const m=box&&box.querySelector('[data-time-part="m"]').value;
+    setP(ed.draft,t.dataset.timeKey,(h&&m)?h+":"+m:"");
+    markDirty(); delete ed.errors.hours;
+    const f=t.closest(".field");
+    if(f){ f.classList.remove("invalid"); const er=f.querySelector(".err"); if(er)er.textContent=""; }
+    renderHoursPreview();
+  }
 });
 document.addEventListener("click",async e=>{
   const btn=e.target.closest("[data-action]");
