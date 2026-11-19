@@ -648,8 +648,10 @@ svg{display:inline-block}
    stores{id,merchantId,code(8位·唯一·永不变更),name,cat,address,phone,contact,perCapita,hours{open,close},
      quals{licenseImg,storeImg,licenseName,uscc},review{status,reason,submittedAt,reviewedAt},
      dishes[{id,name,price,desc}],tags{dishes[],service[],env[]},links{dianping,meituan,douyin},createdAt,updatedAt}
-   reviews{id,storeId,stars,tags,text,channel,createdAt} · session{merchantId,phone,loginAt} */
+   reviews{id,storeId,stars,tags,text,channel,createdAt}
+   商家登录态不落此块：顾客标签页会整块回写，会覆盖掉 session，见 SESSION_KEY */
 const DB_KEY = "hpzs.db.v3";
+const SESSION_KEY = "hpzs.session.v1";
 const DEMO_CODE = "123456";
 const DEMO_PHONE = "13800000000";
 /* 细线图标库：统一 currentColor、1.6 描边、无填充 */
@@ -932,10 +934,16 @@ function normalizeDB(d){
   }
   return d;
 }
+/* 商家登录态独立于业务数据存一个 key：顾客标签页整块回写业务数据时碰不到它 */
+function validSession(s){ return (s&&typeof s==="object"&&s.merchantId)?s:null; }
+function loadSession(){ try{ return validSession(JSON.parse(localStorage.getItem(SESSION_KEY))); }catch(e){ return null; } }
+function saveSession(s){ const v=validSession(s); try{ v?localStorage.setItem(SESSION_KEY,JSON.stringify(v)):localStorage.removeItem(SESSION_KEY); }catch(e){} }
+/* 老版本把 session 存在业务数据里，首次读到就搬出去，避免升级后把人踢下线 */
+function adoptSession(embedded){ const cur=loadSession(); if(cur) return cur; const legacy=validSession(embedded); if(legacy) saveSession(legacy); return legacy; }
 function loadDB(){
   try{
     const raw=localStorage.getItem(DB_KEY);
-    if(raw){ const d=JSON.parse(raw); if(d&&Array.isArray(d.merchants)&&Array.isArray(d.stores)&&Array.isArray(d.reviews)){ normalizeDB(d); saveDB(d); return d; } }
+    if(raw){ const d=JSON.parse(raw); if(d&&Array.isArray(d.merchants)&&Array.isArray(d.stores)&&Array.isArray(d.reviews)){ d.session=adoptSession(d.session); normalizeDB(d); saveDB(d); return d; } }
   }catch(e){}
   try{
     const old=JSON.parse(localStorage.getItem("hpzs.db.v2")||localStorage.getItem("hpzs.db.v1")||"null");
@@ -952,13 +960,14 @@ function loadDB(){
           tags:s.tags||{dishes:["招牌必点"],service:["态度亲切"],env:["干净整洁"]},
           links:s.links||b.links,updatedAt:s.updatedAt||s.createdAt};
       });
-      const d={merchants:old.merchants||[m],stores,reviews:old.reviews,session:null};
+      const d={merchants:old.merchants||[m],stores,reviews:old.reviews,session:loadSession()};
       normalizeDB(d); saveDB(d); return d;
     }
   }catch(e){}
   const d=normalizeDB(seedDB()); saveDB(d); return d;
 }
-function saveDB(d){ try{ localStorage.setItem(DB_KEY, JSON.stringify(d)); return true; }catch(e){ return false; } }
+/* 落盘时剔掉 session：业务数据整块回写不得携带登录态副本 */
+function saveDB(d){ try{ const {session, ...rest}=d; localStorage.setItem(DB_KEY, JSON.stringify(rest)); return true; }catch(e){ return false; } }
 let db = loadDB();
 function currentMerchant(){ return db.session ? db.merchants.find(m=>m.id===db.session.merchantId) : null; }
 function myStores(){ const m=currentMerchant(); return m ? db.stores.filter(s=>s.merchantId===m.id) : []; }
@@ -1555,14 +1564,14 @@ function doLogin(){
     db.merchants.push(m);
   }else m.lastLoginAt=Date.now();
   db.session={merchantId:m.id,phone,loginAt:Date.now()};
-  saveDB(db);
+  saveSession(db.session); saveDB(db);
   if(loginTimer){ clearInterval(loginTimer); loginTimer=null; }
   closeLayers();
   toast(isNew?`注册成功，欢迎加入好评助手`:`欢迎回来，${maskPhone(phone)}`);
   renderConsole();
 }
 function logout(){
-  db.session=null; saveDB(db);
+  db.session=null; saveSession(null); saveDB(db);
   toast("已退出登录");
   renderLogin();
 }
