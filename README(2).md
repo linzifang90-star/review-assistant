@@ -29,11 +29,16 @@
 
 ## 本地运行
 
-本项目使用 Qoder 开发，纯前端应用，数据保存在浏览器 localStorage，无需后端服务器。
+单文件应用：全部源码都在 `index.html` 一个文件里（HTML + CSS + JS，约 207KB），不走 npm / 构建工具链，无需安装依赖，无后端服务器，数据保存在浏览器 localStorage。
 
-- 用 Qoder 打开本项目，点击运行即可本地预览，发布到 Qoder Sites 即上线；
-- 构建产物为静态文件，也可部署到任意静态托管（Vercel / Netlify / GitHub Pages）。
+- 直接用浏览器打开 `index.html` 即可运行；
+- 也可部署到任意静态托管（Qoder Sites / Vercel / Netlify / GitHub Pages）。
 - AI 草稿默认使用本地模板；如需接真实模型，在商家端“AI 设置”中填写 Base URL、API Key 与模型名，并用“测试连接”验证（Key 只保存在本机浏览器，不上传）。
+
+## 项目结构
+
+- `index.html` —— 全部源码（单文件应用）
+- `test/mock-llm.mjs` —— 本地 mock 大模型接口的测试脚本
 
 ## 许可证
 
